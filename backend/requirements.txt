@@ -1,0 +1,9 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.6
+sqlmodel==0.0.21
+transformers==4.43.3
+torch>=2.0.0
+numpy
+scikit-learn
+yake==0.4.8
+python-multipart

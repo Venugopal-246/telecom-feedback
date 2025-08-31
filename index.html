@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <link rel="icon" href="data:,">
+
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Customer Feedback Analyzer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = { darkMode: 'class' }
+  </script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://unpkg.com/scrollreveal"></script>
+
+  <style>
+    .glass {
+      background: rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    .glass:hover {
+      transform: translateY(-6px);
+      box-shadow: 0 10px 25px rgba(255, 0, 0, 0.25);
+    }
+    button:hover { transform: translateY(-2px); }
+    .loader {
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top: 3px solid white;
+      border-radius: 50%;
+      width: 18px;
+      height: 18px;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body class="bg-white text-black dark:bg-black dark:text-gray-100 transition-colors duration-500">
+
+  <!-- Sidebar -->
+  <div class="fixed top-0 left-0 h-full w-64 bg-gray-200 dark:bg-gray-900 shadow-xl p-6 flex flex-col justify-between reveal-left">
+    <div>
+      <h1 class="text-2xl font-bold mb-6 text-red-600 dark:text-red-500">Feedback Analyzer</h1>
+      <nav class="space-y-4">
+        <a href="#home" class="block text-lg hover:text-red-600 dark:hover:text-red-500">Home</a>
+        <a href="#analyzer" class="block text-lg hover:text-red-600 dark:hover:text-red-500">Analyzer</a>
+        <a href="#reports" class="block text-lg hover:text-red-600 dark:hover:text-red-500">Reports</a>
+        <a href="#about" class="block text-lg hover:text-red-600 dark:hover:text-red-500">About</a>
+        <a href="#contact" class="block text-lg hover:text-red-600 dark:hover:text-red-500">Contact</a>
+      </nav>
+    </div>
+    <button onclick="toggleTheme()" class="mt-6 bg-red-600 text-white px-4 py-2 rounded-xl shadow hover:bg-red-700 transition">Toggle Theme</button>
+  </div>
+
+  <!-- Main Content -->
+  <div class="ml-64 p-10 space-y-24">
+
+    <!-- Hero Section -->
+    <section id="home" class="text-center space-y-6 reveal-fade">
+      <h2 class="text-5xl font-extrabold text-red-600 dark:text-red-500 tracking-wide font-sans">VOICERS</h2>
+      <p class="text-lg text-gray-600 dark:text-gray-400 italic">Our Team • Innovating Customer Insights</p>
+      <h3 class="text-3xl font-bold mt-8 text-red-600 dark:text-red-500">Understand Your Customers in Real Time</h3>
+      <p class="text-lg text-gray-600 dark:text-gray-400">Analyze sentiment instantly and generate actionable reports.</p>
+    </section>
+
+    <!-- Features Section -->
+    <section id="analyzer" class="reveal-fade">
+      <h2 class="text-3xl font-bold mb-6 text-red-600 dark:text-red-500">Features</h2>
+      <div class="grid grid-cols-3 gap-6">
+        <div class="glass p-6 rounded-2xl shadow">
+          <h3 class="text-xl font-semibold mb-2 text-red-500">Sentiment Analyzer</h3>
+          <p>Classify feedback as Positive, Negative, or Neutral.</p>
+        </div>
+        <div class="glass p-6 rounded-2xl shadow">
+          <h3 class="text-xl font-semibold mb-2 text-red-500">Report Generator</h3>
+          <p>Summarize issues, recurring themes, and recommendations.</p>
+        </div>
+        <div class="glass p-6 rounded-2xl shadow">
+          <h3 class="text-xl font-semibold mb-2 text-red-500">Customer Insights</h3>
+          <p>Identify pain points and positive highlights easily.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Reports Section -->
+    <section id="reports" class="reveal-fade">
+      <h2 class="text-3xl font-bold mb-6 text-red-600 dark:text-red-500">Sentiment Overview</h2>
+      <canvas id="sentimentChart" class="bg-white dark:bg-gray-800 rounded-2xl p-6"></canvas>
+    </section>
+
+    <!-- Feedback Form -->
+    <section id="contact" class="reveal-fade">
+      <h2 class="text-3xl font-bold mb-6 text-red-600 dark:text-red-500">Submit Your Feedback</h2>
+      <form id="feedback-form" class="grid grid-cols-2 gap-6 glass p-6 rounded-2xl shadow">
+        <input type="text" placeholder="Customer ID" id="customer-id" class="p-3 border rounded-xl bg-gray-50 dark:bg-gray-800">
+        <input type="text" placeholder="Name" id="customer-name" class="p-3 border rounded-xl bg-gray-50 dark:bg-gray-800">
+        <textarea id="feedback-text" placeholder="Enter your feedback here..." rows="4" class="p-3 border rounded-xl col-span-2 bg-gray-50 dark:bg-gray-800"></textarea>
+        <button id="submit-btn" type="submit" class="col-span-2 bg-red-600 text-white py-3 rounded-xl shadow flex items-center justify-center space-x-2">
+          <span id="btn-text">Submit Feedback</span>
+          <span id="btn-loader" class="loader hidden"></span>
+        </button>
+      </form>
+      <p id="result" class="mt-4 text-lg font-semibold"></p>
+    </section>
+  </div>
+<script>
+  // Theme Toggle
+  function toggleTheme() {
+    document.documentElement.classList.toggle('dark');
+    localStorage.setItem('theme', document.documentElement.classList.contains('dark') ? 'dark' : 'light');
+  }
+  if (localStorage.getItem('theme') === 'light') {
+    document.documentElement.classList.remove('dark');
+  }
+
+  // Chart setup
+  const chartCtx = document.getElementById("sentimentChart").getContext("2d");
+  let chart = new Chart(chartCtx, {
+    type: "doughnut",
+    data: {
+      labels: ["Positive", "Negative", "Neutral"],
+      datasets: [{
+        data: [0, 0, 0],
+        backgroundColor: ["#16a34a", "#dc2626", "#fbbf24"]
+      }]
+    }
+  });
+
+  // 🔹 Fetch reports
+async function loadReport() {
+  try {
+    const response = await fetch("http://127.0.0.1:8000/report");
+    const data = await response.json();
+
+    // Update chart with backend totals
+    chart.data.datasets[0].data = [
+      data.totals?.positive || 0,
+      data.totals?.negative || 0,
+      data.totals?.neutral || 0
+    ];
+    chart.update();
+
+    // Show detailed insights
+    const reportsSection = document.getElementById("reports");
+    reportsSection.innerHTML = `
+      <div class="glass p-6 mt-6 rounded-2xl shadow text-left">
+        <h3 class="text-2xl font-bold mb-4 text-red-500">Customer Feedback Insights</h3>
+        <p><strong>Total Feedback:</strong> ${data.totals?.total_feedback ?? 0}</p>
+        <p><strong>Urgent Complaints:</strong> ${data.urgent_count ?? 0}</p>
+
+        <div class="mt-4">
+          <h4 class="font-bold">By Service</h4>
+          <pre>${JSON.stringify(data.by_service || {}, null, 2)}</pre>
+        </div>
+
+        <div class="mt-4">
+          <h4 class="font-bold text-red-500">Top Pain Points</h4>
+          <p>${Array.isArray(data.top_pain_points) ? data.top_pain_points.join(", ") : "N/A"}</p>
+        </div>
+
+        <div class="mt-4">
+          <h4 class="font-bold text-green-500">Top Positives</h4>
+          <p>${Array.isArray(data.top_positives) ? data.top_positives.join(", ") : "N/A"}</p>
+        </div>
+
+        <div class="mt-4">
+          <h4 class="font-bold text-blue-500">Recommendations</h4>
+          <ul class="list-disc pl-6">
+            ${(Array.isArray(data.recommendations) ? data.recommendations : []).map(r => `<li>${r}</li>`).join("")}
+          </ul>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    console.error("Error loading report:", err);
+  }
+  
+}
+
+// 🔹 Handle feedback form submission
+document.getElementById("feedback-form").addEventListener("submit", async function(e) {
+  e.preventDefault();
+
+  const btnText = document.getElementById("btn-text");
+  const btnLoader = document.getElementById("btn-loader");
+  btnText.classList.add("hidden");
+  btnLoader.classList.remove("hidden");
+
+  const feedback = {
+    customer_id: document.getElementById("customer-id").value,
+    name: document.getElementById("customer-name").value,
+    text: document.getElementById("feedback-text").value,
+  };
+
+  try {
+    const response = await fetch("http://127.0.0.1:8000/feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(feedback)
+    });
+
+    const data = await response.json();
+    document.getElementById("result").innerText =
+      `✅ Feedback submitted! Sentiment: ${data.sentiment} (Confidence: ${data.confidence})`;
+
+    // Refresh report automatically
+    loadReport();
+  } catch (err) {
+    console.error("Error submitting feedback:", err);
+    document.getElementById("result").innerText = "❌ Error submitting feedback.";
+  }
+
+  btnText.classList.remove("hidden");
+  btnLoader.classList.add("hidden");
+  document.getElementById("feedback-form").reset();
+});
+
+// 🔹 Run once on page ready
+document.addEventListener("DOMContentLoaded", function(){
+  loadReport();
+  ScrollReveal().reveal('.reveal-fade', { distance: '40px', duration: 1000, origin: 'bottom' });
+  ScrollReveal().reveal('.reveal-left', { distance: '50px', duration: 1000, origin: 'left' });
+});
+
+
+
+</script>
+</body>
+</html>
